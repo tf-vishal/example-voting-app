@@ -1,8 +1,13 @@
-FROM python:3.9-slim
+#Base ImagE?
+#Install some tools?
+#where does code live ?
+#Command to run
 
-# add apache bench (ab) tool
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+
+FROM python:3.14.0b4-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     apache2-utils \
     && rm -rf /var/lib/apt/lists/*
 
@@ -10,7 +15,7 @@ WORKDIR /seed
 
 COPY . .
 
-# create POST data files with ab friendly formats
+#Create POST data files with ab friendly formats
 RUN python make-data.py
 
 CMD ["/seed/generate-votes.sh"]
