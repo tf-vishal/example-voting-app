@@ -1,0 +1,89 @@
+services:
+  vote:
+    build: ./vote
+    ports:
+      - "8080:80"
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./vote:/usr/local/app
+    networks:
+      - front-tier
+      - back-tier
+    
+  result:
+    build: ./result
+    # use nodemon rather than node for local dev
+    entrypoint: nodemon --inspect=0.0.0.0 server.js
+    ports:
+      - "8081:80"
+      - "127.0.0.1:9229:9229"  # Debug port
+    depends_on:
+      - db
+    volumes:
+      - ./result:/usr/local/app
+    networks:
+      - front-tier
+      - back-tier
+
+
+  worker:
+    build: ./worker
+    depends_on:
+      - redis
+      - db
+    volumes:
+      - ./worker:/usr/local/app
+    networks:
+      - back-tier
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - "./healthchecks:/healthchecks"
+    healthcheck:
+      test: "/healthchecks/redis.sh"
+      interval: "5s"
+    networks:
+      - back-tier
+
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - "./healthchecks:/healthchecks"
+    healthcheck:
+      test: "/healthchecks/postgres.sh"
+      interval: "5s"
+    networks:
+      - back-tier
+
+    #This service runs once to seed the database with votes
+    #It won't run unlesss you specify the "seed " profile
+    #docker compose --profile seed up -d
+
+  seed:
+    build: ./seed-data
+    profiles:
+      - seed
+    depends_on:
+      - vote
+    networks:
+      - front-tier
+    restart: "no"
+
+networks:
+  front-tier:
+  back-tier:
+
+volumes:
+  db_data:
