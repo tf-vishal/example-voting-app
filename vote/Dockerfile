@@ -6,7 +6,7 @@
 
 #Stage1
 
-FROM python:3.14.0b4-slim AS base
+FROM python:3.13.5-slim AS base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
