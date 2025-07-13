@@ -13,7 +13,7 @@ RUN apt-get update && \
 
 WORKDIR /usr/local/app
 
-RUN npm install nodemon
+RUN npm install -g nodemon
 
 COPY package.json ./
 COPY package-lock.json ./
